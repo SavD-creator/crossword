@@ -2,36 +2,43 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Premium Crossword</title>
+<title>Crossword with Clues</title>
 <style>
-body { font-family: Arial; text-align:center; }
-.grid { display:grid; grid-template-columns: repeat(15, 34px); gap:2px; justify-content:center; margin:20px;}
+body { font-family: Arial; display:flex; gap:40px; padding:20px;}
+.grid { display:grid; grid-template-columns: repeat(15, 34px); gap:2px;}
 .cell { width:34px; height:34px; border:1px solid #333; position:relative;}
 .cell input { width:100%; height:100%; text-align:center; font-size:18px; border:none;}
 .black { background:black; }
 .number { position:absolute; top:0; left:2px; font-size:10px; }
-.active { background:#ffeaa7; }
-.correct { background:#c8f7c5; }
-.incorrect { background:#f7c5c5; }
-.clues { max-width:600px; margin:20px auto; text-align:left; }
-button { margin:5px; padding:6px 10px; }
+.clues { max-width:300px;}
 </style>
 </head>
 <body>
 
-<h2>Premium Crossword Puzzle</h2>
-
-<div id="grid" class="grid"></div>
-
 <div>
-<button onclick="check()">Check</button>
-<button onclick="reveal()">Reveal</button>
-<button onclick="window.print()">Print</button>
+<h2>Crossword</h2>
+<div id="grid" class="grid"></div>
 </div>
 
 <div class="clues">
-<h3>Clues</h3>
-<p>Fill in the grid using your vocabulary list.</p>
+<h3>Across</h3>
+<ol>
+<li>ancient</li>
+<li>a selection of writing, songs, etc.</li>
+<li>a strong dislike</li>
+<li>gift or blessing</li>
+<li>plague, disease</li>
+<li>one who behaves the same as others</li>
+<li>sweet, fancy food</li>
+<li>rambling, lacking order</li>
+<li>to thwart, baffle</li>
+<li>to deny knowledge of responsibility</li>
+<li>extremely lively</li>
+<li>effective</li>
+<li>impudence</li>
+<li>limp</li>
+<li>fruitful or fertile</li>
+</ol>
 </div>
 
 <script>
@@ -54,64 +61,22 @@ const solution = [
 ];
 
 const grid = document.getElementById("grid");
-let inputs = [];
 
-solution.forEach((row, r) => {
-  let rowInputs = [];
-  row.split("").forEach((cell, c) => {
-    const div = document.createElement("div");
+solution.forEach(row=>{
+  row.split("").forEach(cell=>{
+    const div=document.createElement("div");
     div.classList.add("cell");
-
-    if(cell === "#"){
+    if(cell==="#"){
       div.classList.add("black");
-      rowInputs.push(null);
     } else {
-      const input = document.createElement("input");
-      input.maxLength = 1;
-
-      input.addEventListener("input", () => {
-        input.value = input.value.toUpperCase();
-      });
-
-      input.addEventListener("focus", () => {
-        document.querySelectorAll(".cell").forEach(c => c.classList.remove("active"));
-        div.classList.add("active");
-      });
-
+      const input=document.createElement("input");
+      input.maxLength=1;
+      input.oninput=()=> input.value=input.value.toUpperCase();
       div.appendChild(input);
-      rowInputs.push(input);
     }
-
     grid.appendChild(div);
   });
-  inputs.push(rowInputs);
 });
-
-function check(){
-  inputs.forEach((row, r) => {
-    row.forEach((input, c) => {
-      if(input){
-        if(input.value === solution[r][c]){
-          input.classList.add("correct");
-          input.classList.remove("incorrect");
-        } else {
-          input.classList.add("incorrect");
-          input.classList.remove("correct");
-        }
-      }
-    });
-  });
-}
-
-function reveal(){
-  inputs.forEach((row, r) => {
-    row.forEach((input, c) => {
-      if(input){
-        input.value = solution[r][c];
-      }
-    });
-  });
-}
 </script>
 
 </body>
