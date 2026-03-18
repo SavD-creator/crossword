@@ -2,15 +2,19 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Crossword with Clues</title>
+<title>NYT Style Crossword</title>
 <style>
-body { font-family: Arial; display:flex; gap:40px; padding:20px;}
+body { font-family: Arial; display:flex; gap:30px; padding:20px;}
 .grid { display:grid; grid-template-columns: repeat(15, 34px); gap:2px;}
 .cell { width:34px; height:34px; border:1px solid #333; position:relative;}
 .cell input { width:100%; height:100%; text-align:center; font-size:18px; border:none;}
 .black { background:black; }
-.number { position:absolute; top:0; left:2px; font-size:10px; }
+.number { position:absolute; top:0; left:2px; font-size:10px;}
+.highlight { background:#ffeaa7; }
+.active { outline:2px solid blue; }
 .clues { max-width:300px;}
+li { cursor:pointer; margin-bottom:4px;}
+.active-clue { font-weight:bold; text-decoration:underline;}
 </style>
 </head>
 <body>
@@ -22,23 +26,9 @@ body { font-family: Arial; display:flex; gap:40px; padding:20px;}
 
 <div class="clues">
 <h3>Across</h3>
-<ol>
-<li>ancient</li>
-<li>a selection of writing, songs, etc.</li>
-<li>a strong dislike</li>
-<li>gift or blessing</li>
-<li>plague, disease</li>
-<li>one who behaves the same as others</li>
-<li>sweet, fancy food</li>
-<li>rambling, lacking order</li>
-<li>to thwart, baffle</li>
-<li>to deny knowledge of responsibility</li>
-<li>extremely lively</li>
-<li>effective</li>
-<li>impudence</li>
-<li>limp</li>
-<li>fruitful or fertile</li>
-</ol>
+<ol id="across"></ol>
+<h3>Down</h3>
+<ol id="down"></ol>
 </div>
 
 <script>
@@ -60,23 +50,137 @@ const solution = [
 "FECUND########"
 ];
 
-const grid = document.getElementById("grid");
+const acrossClues = [
+"ancient","a selection of writing, songs, etc.","a strong dislike",
+"gift or blessing","plague, disease","one who behaves the same as others",
+"sweet, fancy food","rambling, lacking order","to thwart, baffle",
+"to deny knowledge of responsibility","extremely lively","effective",
+"impudence","limp","fruitful or fertile"
+];
 
-solution.forEach(row=>{
-  row.split("").forEach(cell=>{
-    const div=document.createElement("div");
-    div.classList.add("cell");
-    if(cell==="#"){
-      div.classList.add("black");
-    } else {
-      const input=document.createElement("input");
-      input.maxLength=1;
-      input.oninput=()=> input.value=input.value.toUpperCase();
-      div.appendChild(input);
+const gridEl = document.getElementById("grid");
+const acrossEl = document.getElementById("across");
+const downEl = document.getElementById("down");
+
+let inputs = [];
+let numbers = [];
+let acrossWords = [];
+let downWords = [];
+
+function isLetter(r,c){
+ return solution[r] && solution[r][c] && solution[r][c] !== "#";
+}
+
+// build grid + numbering
+let num = 1;
+for(let r=0;r<solution.length;r++){
+ let rowInputs=[];
+ numbers[r]=[];
+ for(let c=0;c<15;c++){
+  const cell = solution[r][c] || "#";
+  const div = document.createElement("div");
+  div.classList.add("cell");
+
+  if(cell==="#"){
+    div.classList.add("black");
+    rowInputs.push(null);
+  } else {
+    let startAcross = (!isLetter(r,c-1) && isLetter(r,c+1));
+    let startDown = (!isLetter(r-1,c) && isLetter(r+1,c));
+
+    if(startAcross || startDown){
+      numbers[r][c]=num;
+      const numSpan=document.createElement("span");
+      numSpan.className="number";
+      numSpan.textContent=num;
+      div.appendChild(numSpan);
+      num++;
     }
-    grid.appendChild(div);
-  });
+
+    const input=document.createElement("input");
+    input.maxLength=1;
+
+    input.addEventListener("keydown",(e)=>{
+      if(e.key==="ArrowRight") move(r,c+1);
+      if(e.key==="ArrowLeft") move(r,c-1);
+      if(e.key==="ArrowDown") move(r+1,c);
+      if(e.key==="ArrowUp") move(r-1,c);
+    });
+
+    input.addEventListener("input",()=>{
+      input.value=input.value.toUpperCase();
+    });
+
+    div.appendChild(input);
+    rowInputs.push(input);
+  }
+
+  gridEl.appendChild(div);
+ }
+ inputs.push(rowInputs);
+}
+
+// extract across words
+for(let r=0;r<solution.length;r++){
+ for(let c=0;c<15;c++){
+  if(isLetter(r,c) && !isLetter(r,c-1) && isLetter(r,c+1)){
+    let cells=[];
+    let cc=c;
+    while(isLetter(r,cc)){
+      cells.push([r,cc]);
+      cc++;
+    }
+    acrossWords.push(cells);
+  }
+ }
+}
+
+// extract down words
+for(let r=0;r<solution.length;r++){
+ for(let c=0;c<15;c++){
+  if(isLetter(r,c) && !isLetter(r-1,c) && isLetter(r+1,c)){
+    let cells=[];
+    let rr=r;
+    while(isLetter(rr,c)){
+      cells.push([rr,c]);
+      rr++;
+    }
+    downWords.push(cells);
+  }
+ }
+}
+
+// render clues
+acrossWords.forEach((w,i)=>{
+ let li=document.createElement("li");
+ li.textContent=(i+1)+". "+(acrossClues[i]||"");
+ li.onclick=()=>highlight(w,li,"across");
+ acrossEl.appendChild(li);
 });
+
+downWords.forEach((w,i)=>{
+ let li=document.createElement("li");
+ li.textContent=(i+1)+". (down)";
+ li.onclick=()=>highlight(w,li,"down");
+ downEl.appendChild(li);
+});
+
+function highlight(cells, li, type){
+ document.querySelectorAll(".cell").forEach(c=>c.classList.remove("highlight"));
+ document.querySelectorAll("li").forEach(l=>l.classList.remove("active-clue"));
+
+ cells.forEach(([r,c])=>{
+  gridEl.children[r*15+c].classList.add("highlight");
+ });
+
+ li.classList.add("active-clue");
+}
+
+function move(r,c){
+ if(inputs[r] && inputs[r][c]){
+   inputs[r][c].focus();
+ }
+}
 </script>
 
 </body>
