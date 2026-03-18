@@ -1,0 +1,56 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Crossword Puzzle</title>
+<style>
+  body { font-family: Arial; text-align: center; }
+  .grid { display: grid; grid-template-columns: repeat(15, 30px); gap: 2px; justify-content: center; margin-top:20px;}
+  input { width: 30px; height: 30px; text-align: center; font-size: 16px; }
+  .black { background: black; }
+</style>
+</head>
+<body>
+
+<h2>Interactive Crossword</h2>
+
+<div class="grid" id="grid"></div>
+
+<script>
+const layout = [
+"ANTEDILUVIAN##",
+"ANTHOLOGY#####",
+"ANTIPATHY#####",
+"BOON##########",
+"BLIGHT########",
+"CONFORMITY####",
+"CONFECTION####",
+"DISCURSIVE####",
+"DISCOMFIT#####",
+"DISAVOW#######",
+"EBULLIENT#####",
+"EFFICACIOUS###",
+"EFFRONTERY####",
+"FLACCID#######",
+"FECUND########"
+];
+
+const grid = document.getElementById("grid");
+
+layout.forEach(row => {
+  row.split("").forEach(cell => {
+    const input = document.createElement("input");
+    if(cell === "#"){
+      input.disabled = true;
+      input.classList.add("black");
+    }
+    grid.appendChild(input);
+  });
+});
+</script>
+
+<p>Type letters into the boxes. Black squares are blocked.</p>
+
+</body>
+</html>
